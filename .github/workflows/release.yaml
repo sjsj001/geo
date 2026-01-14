@@ -20,7 +20,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: "1.19.5"
+          go-version: "1.25.0"
       
       - name: Build geosite
         id: build_site
@@ -65,6 +65,16 @@ jobs:
           asset_path: ./sing-geosite/geosite.db
           asset_name: geosite.db
           asset_content_type: application/octet-stream
+
+      - name: Release geosite.dat
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./sing-geosite/geosite.dat
+          asset_name: geosite.dat
+          asset_content_type: application/octet-stream
       
       - name: Release geoip.db
         uses: actions/upload-release-asset@v1
@@ -74,4 +84,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./sing-geoip/geoip.db
           asset_name: geoip.db
+          asset_content_type: application/octet-stream
+
+      - name: Release geoip.dat
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./sing-geoip/geoip.dat
+          asset_name: geoip.dat
           asset_content_type: application/octet-stream

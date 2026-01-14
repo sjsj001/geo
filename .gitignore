@@ -1,4 +1,5 @@
 rule-set
 data_source
 *.db
+*.dat
 .DS_Store

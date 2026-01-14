@@ -220,7 +220,39 @@ func handle(data map[string][]geosite.Item) map[string][]geosite.Item {
 	return data
 }
 
-func generate(release *github.RepositoryRelease, output string, ruleSetOutput string) error {
+func writeV2RayDat(output string, data map[string][]geosite.Item) error {
+	protoList := new(routercommon.GeoSiteList)
+	for code, items := range data {
+		site := &routercommon.GeoSite{
+			CountryCode: strings.ToUpper(code),
+		}
+		for _, item := range items {
+			domain := &routercommon.Domain{
+				Value: item.Value,
+			}
+			switch item.Type {
+			case geosite.RuleTypeDomainKeyword:
+				domain.Type = routercommon.Domain_Plain
+			case geosite.RuleTypeDomainRegex:
+				domain.Type = routercommon.Domain_Regex
+			case geosite.RuleTypeDomain:
+				domain.Type = routercommon.Domain_Full
+			case geosite.RuleTypeDomainSuffix:
+				domain.Type = routercommon.Domain_RootDomain
+				domain.Value = strings.TrimPrefix(domain.Value, ".")
+			}
+			site.Domain = append(site.Domain, domain)
+		}
+		protoList.Entry = append(protoList.Entry, site)
+	}
+	protoBytes, err := proto.Marshal(protoList)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(output, protoBytes, 0644)
+}
+
+func generate(release *github.RepositoryRelease, output string, v2rayOutput string, ruleSetOutput string) error {
 	vData, err := download(release)
 	if err != nil {
 		return err
@@ -241,6 +273,16 @@ func generate(release *github.RepositoryRelease, output string, ruleSetOutput st
 	if err != nil {
 		return err
 	}
+
+	if v2rayOutput != "" {
+		v2rayOutputPath, _ := filepath.Abs(v2rayOutput)
+		os.Stderr.WriteString("write " + v2rayOutputPath + "\n")
+		err = writeV2RayDat(v2rayOutputPath, domainMap)
+		if err != nil {
+			return err
+		}
+	}
+
 	os.RemoveAll(ruleSetOutput)
 	err = os.MkdirAll(ruleSetOutput, 0o755)
 	if err != nil {
@@ -296,12 +338,12 @@ func setActionOutput(name string, content string) {
 	os.Stdout.WriteString("::set-output name=" + name + "::" + content + "\n")
 }
 
-func release(source string, output string, ruleSetOutput string) error {
+func release(source string, output string, v2rayOutput string, ruleSetOutput string) error {
 	sourceRelease, err := fetch(source)
 	if err != nil {
 		return err
 	}
-	err = generate(sourceRelease, output, ruleSetOutput)
+	err = generate(sourceRelease, output, v2rayOutput, ruleSetOutput)
 	if err != nil {
 		return err
 	}
@@ -313,6 +355,7 @@ func main() {
 	err := release(
 		"Loyalsoldier/v2ray-rules-dat",
 		"geosite.db",
+		"geosite.dat",
 		"rule-set",
 	)
 	if err != nil {

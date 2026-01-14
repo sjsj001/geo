@@ -20,6 +20,9 @@ import (
 	"github.com/maxmind/mmdbwriter/inserter"
 	"github.com/maxmind/mmdbwriter/mmdbtype"
 
+	"github.com/v2fly/v2ray-core/v5/app/router/routercommon"
+	"google.golang.org/protobuf/proto"
+
 	"go4.org/netipx"
 
 	"github.com/sagernet/sing-box/common/srs"
@@ -30,6 +33,7 @@ import (
 const (
 	DataSourceDir = "data_source"
 	OutputMMDB    = "geoip.db"
+	OutputDat     = "geoip.dat"
 	OutputRuleSet = "rule-set"
 )
 
@@ -543,6 +547,12 @@ func writeOutputs(builders map[string]*netipx.IPSetBuilder) error {
 		return err
 	}
 
+	// 1.1 geoip.dat (V2Ray)
+	log.Printf("Writing %s...", OutputDat)
+	if err := writeV2RayDat(regionData, OutputDat); err != nil {
+		return err
+	}
+
 	// 2. geoip-cn.db (Only CN)
 	if cnData, ok := regionData["cn"]; ok {
 		log.Printf("Writing geoip-cn.db...")
@@ -672,6 +682,33 @@ func writeMMDB(data map[string][]*net.IPNet, output string, codes []string) erro
 	defer out.Close()
 	_, err = writer.WriteTo(out)
 	return err
+}
+
+func writeV2RayDat(data map[string][]*net.IPNet, output string) error {
+	protoList := new(routercommon.GeoIPList)
+	for code, ipNets := range data {
+		geoip := &routercommon.GeoIP{
+			CountryCode: strings.ToUpper(code),
+		}
+		for _, ipNet := range ipNets {
+			ip := ipNet.IP.To4()
+			if ip == nil {
+				continue
+			}
+			ones, _ := ipNet.Mask.Size()
+			cidr := &routercommon.CIDR{
+				Ip:     ip,
+				Prefix: uint32(ones),
+			}
+			geoip.Cidr = append(geoip.Cidr, cidr)
+		}
+		protoList.Entry = append(protoList.Entry, geoip)
+	}
+	protoBytes, err := proto.Marshal(protoList)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(output, protoBytes, 0644)
 }
 
 func prefixToIPNet(p netip.Prefix) *net.IPNet {
