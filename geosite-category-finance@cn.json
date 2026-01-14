@@ -1,0 +1,20 @@
+{
+    "rules": [
+        {
+            "domain": [
+                "futuesop.com",
+                "futuniuniu.com",
+                "futunn.com",
+                "futustatic.com",
+                "ifastps.com.cn"
+            ],
+            "domain_suffix": [
+                ".futuesop.com",
+                ".futuniuniu.com",
+                ".futunn.com",
+                ".futustatic.com",
+                ".ifastps.com.cn"
+            ]
+        }
+    ]
+}

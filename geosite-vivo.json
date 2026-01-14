@@ -1,0 +1,22 @@
+{
+    "rules": [
+        {
+            "domain": [
+                "iqoo.com",
+                "vivo.cn",
+                "vivo.com",
+                "vvstc.com",
+                "vivo.com.cn",
+                "vivoglobal.com"
+            ],
+            "domain_suffix": [
+                ".iqoo.com",
+                ".vivo.cn",
+                ".vivo.com",
+                ".vvstc.com",
+                ".vivo.com.cn",
+                ".vivoglobal.com"
+            ]
+        }
+    ]
+}
