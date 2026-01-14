@@ -216,10 +216,8 @@ func handle(data map[string][]geosite.Item) map[string][]geosite.Item {
 	gfw := remove(data["gfw"], data["telegram"])
 	gfw = merge(gfw, buildItemList(geosite.RuleTypeDomainKeyword, gfwKeywords))
 
-	result := make(map[string][]geosite.Item)
-	result["gfw-!tg"] = gfw
-	result["github"] = data["github"]
-	return result
+	data["gfw-sp"] = gfw
+	return data
 }
 
 func generate(release *github.RepositoryRelease, output string, ruleSetOutput string) error {
