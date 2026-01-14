@@ -1,0 +1,77 @@
+name: Release
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1"
+ 
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.19.5"
+      
+      - name: Build geosite
+        id: build_site
+        run: |
+          cd sing-geosite
+          go run -v .
+      - name: Build geoip
+        id: build_ip
+        env:
+          IPINFO_TOKEN: ${{ secrets.IPINFO_TOKEN }}
+        run: |
+          cd sing-geoip
+          go run -v .
+      
+      - name: Release rule sets
+        if: steps.build.outputs.skip != 'true'
+        run: .github/release-rule-set.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current time
+        id: time
+        run: echo "time=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+      
+      - name: Create a release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.time.outputs.time }}
+          release_name: ${{ steps.time.outputs.time }}
+          draft: false
+          prerelease: false
+      
+      - name: Release geosite.db
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./sing-geosite/geosite.db
+          asset_name: geosite.db
+          asset_content_type: application/octet-stream
+      
+      - name: Release geoip.db
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./sing-geoip/geoip.db
+          asset_name: geoip.db
+          asset_content_type: application/octet-stream
