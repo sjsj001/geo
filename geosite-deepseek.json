@@ -1,0 +1,8 @@
+{
+    "rules": [
+        {
+            "domain": "deepseek.com",
+            "domain_suffix": ".deepseek.com"
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "rules": [
+        {
+            "domain": [
+                "fix-price.com",
+                "lenta.com",
+                "lenta.tech"
+            ],
+            "domain_suffix": [
+                ".fix-price.com",
+                ".lenta.com",
+                ".lenta.tech"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+{
+    "rules": [
+        {
+            "domain": "ficbook.net",
+            "domain_suffix": ".ficbook.net"
+        }
+    ]
+}
