@@ -114,6 +114,11 @@ func run() error {
 	}
 	applyOverride("cn", cnGao, builders)
 
+	// 7. Private / Reserved
+	log.Println("Step 7: Adding private/reserved ranges...")
+	privatePrefixes := getPrivatePrefixes()
+	applyOverride("private", privatePrefixes, builders)
+
 	// Finalize
 	log.Println("Generating outputs...")
 	return writeOutputs(builders)
@@ -510,6 +515,38 @@ func processCNGaoyifan() ([]netip.Prefix, error) {
 		return nil, err
 	}
 	return parseCIDRList(path, "CN Gaoyifan")
+}
+
+// ---------------- Step 7: Private / Reserved ----------------
+
+func getPrivatePrefixes() []netip.Prefix {
+	cidrs := []string{
+		"0.0.0.0/8",
+		"10.0.0.0/8",
+		"100.64.0.0/10",
+		"127.0.0.0/8",
+		"169.254.0.0/16",
+		"172.16.0.0/12",
+		"192.0.0.0/24",
+		"192.0.2.0/24",
+		"192.88.99.0/24",
+		"192.168.0.0/16",
+		"198.18.0.0/15",
+		"198.51.100.0/24",
+		"203.0.113.0/24",
+		"224.0.0.0/3",
+		"::/127",
+		"fc00::/7",
+		"fe80::/10",
+		"ff00::/8",
+	}
+	prefixes := make([]netip.Prefix, 0, len(cidrs))
+	for _, c := range cidrs {
+		p := netip.MustParsePrefix(c)
+		prefixes = append(prefixes, p)
+	}
+	log.Printf("Private/Reserved: %d prefixes", len(prefixes))
+	return prefixes
 }
 
 // ---------------- Writers ----------------
